@@ -1,0 +1,128 @@
+% =====================================================================
+% AutoQP -- UML Use Case Diagram
+% Standalone TikZ document. Compiles on its own; the tikzpicture below
+% can also be dropped into a larger document (e.g. as a figure in the
+% SRS) if a full page is not wanted.
+% =====================================================================
+\documentclass[tikz, border=12pt]{standalone}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usetikzlibrary{positioning, calc, fit, backgrounds, arrows.meta, shapes.geometric}
+
+% --- Reusable styles -------------------------------------------------
+% Keeping every visual choice in \tikzset means the diagram body below
+% reads as pure layout and relationships, not styling detail.
+\tikzset{
+  usecase/.style = {
+    ellipse, draw, thick, align=center,
+    minimum width=3.3cm, minimum height=1.15cm,
+    font=\small, fill=gray!5, inner sep=2pt
+  },
+  actor/.style = {
+    minimum width=1.1cm, minimum height=1.7cm,
+    path picture = {
+      % Simple stick figure, drawn relative to the node's own bounding
+      % box so the whole style is reusable at any position.
+      \draw[thick] ([yshift=0.50cm]path picture bounding box.center) circle (0.16cm);
+      \draw[thick] ([yshift=0.34cm]path picture bounding box.center) -- ++(0,-0.50);
+      \draw[thick] ([yshift=0.12cm]path picture bounding box.center) ++(-0.27,0) -- ++(0.54,0);
+      \draw[thick] ([yshift=-0.16cm]path picture bounding box.center) -- ++(-0.22,-0.40);
+      \draw[thick] ([yshift=-0.16cm]path picture bounding box.center) -- ++(0.22,-0.40);
+    }
+  },
+  actorlabel/.style = { font=\small, align=center },
+  assoc/.style   = { thick },
+  include/.style = { dashed, thick, -{Stealth[length=2.2mm]} },
+  stereo/.style  = { midway, fill=white, font=\tiny, inner sep=1pt }
+}
+
+\begin{document}
+\begin{tikzpicture}[node distance=1.3cm and 2.6cm]
+
+  % ------------------------------------------------------------------
+  % Use cases, laid out purely with relative positioning. The shape
+  % naturally narrows at "Review Staged Questions" and again at
+  % "Compile Paper to PDF" -- both are single gateways every path
+  % above them has to pass through, so the layout mirrors the actual
+  % pipeline rather than being an arbitrary grid.
+  % ------------------------------------------------------------------
+  \node[usecase] (login) {Log In};
+  \node[usecase, right=2.6cm of login] (manage) {Manage Subjects\\\& Assignments};
+
+  \node[usecase, below=of login]  (genai)   {Generate Questions\\via AI};
+  \node[usecase, below=of manage] (extract) {Extract Questions\\from Input};
+
+  \coordinate (mid1) at ($(genai)!0.5!(extract)$);
+  \node[usecase, below=of mid1] (review) {Review Staged\\Questions};
+
+  \node[usecase, below left=1.3cm and 0.5cm of review]  (search) {Search Question\\Bank};
+  \node[usecase, below right=1.3cm and 0.5cm of review] (fork)   {Fork Question};
+
+  \node[usecase, below=of search] (autoassemble) {Auto-Assemble\\Paper};
+  \node[usecase, below=of fork]   (refresh)      {Refresh Paper to\\Latest Version};
+
+  \coordinate (mid2) at ($(autoassemble)!0.5!(refresh)$);
+  \node[usecase, below=of mid2] (compile) {Compile Paper\\to PDF};
+
+  % ------------------------------------------------------------------
+  % System boundary -- computed automatically from the use cases via
+  % the `fit` library, then pushed onto the background layer so it
+  % renders behind everything without affecting draw order below.
+  % ------------------------------------------------------------------
+  \begin{scope}[on background layer]
+    \node[draw, thick, rounded corners, inner sep=0.9cm,
+          fit=(login)(manage)(genai)(extract)(review)
+              (search)(fork)(autoassemble)(refresh)(compile),
+          label={[font=\bfseries]north:AutoQP}] (boundary) {};
+  \end{scope}
+
+  % ------------------------------------------------------------------
+  % Actors. Each pair shares one vertical lane (admin above instructor,
+  % AI Provider above Compilation Service) so both are placed with a
+  % single relative shift from the other, rather than independently.
+  % ------------------------------------------------------------------
+  \node[actor, left=4.2cm of review] (instructor) {};
+  \node[actorlabel, below=0.15cm of instructor] {Instructor};
+
+  \node[actor, above=2.6cm of instructor] (admin) {};
+  \node[actorlabel, below=0.15cm of admin] {Administrator};
+
+  \node[actor, right=4.2cm of compile] (compilesvc) {};
+  \node[actorlabel, below=0.15cm of compilesvc] {Compilation\\Service};
+
+  \node[actor, above right=1.6cm and 2.3cm of extract] (aiprovider) {};
+  \node[actorlabel, below=0.15cm of aiprovider] {AI Provider};
+
+  % ------------------------------------------------------------------
+  % Associations (plain lines -- an actor simply participates).
+  % ------------------------------------------------------------------
+  \draw[assoc] (instructor) -- (login);
+  \draw[assoc] (instructor) -- (genai);
+  \draw[assoc] (instructor) -- (extract);
+  \draw[assoc] (instructor) -- (review);
+  \draw[assoc] (instructor) -- (search);
+  \draw[assoc] (instructor) -- (fork);
+  \draw[assoc] (instructor) -- (autoassemble);
+  \draw[assoc] (instructor) -- (refresh);
+  \draw[assoc] (instructor) -- (compile);
+
+  \draw[assoc] (admin) -- (login);
+  \draw[assoc] (admin) -- (manage);
+
+  \draw[assoc] (aiprovider) -- (genai);
+  \draw[assoc] (aiprovider) -- (extract);
+
+  \draw[assoc] (compilesvc) -- (compile);
+
+  % ------------------------------------------------------------------
+  % <<include>> relationships -- dashed, arrow points at the included
+  % use case, per standard UML convention.
+  % ------------------------------------------------------------------
+  \draw[include] (genai)   -- node[stereo] {\guillemotleft include\guillemotright} (review);
+  \draw[include] (extract) -- node[stereo] {\guillemotleft include\guillemotright} (review);
+  \draw[include] (autoassemble) -- node[stereo] {\guillemotleft include\guillemotright} (search);
+
+\end{tikzpicture}
+\end{document}

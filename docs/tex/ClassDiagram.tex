@@ -1,0 +1,210 @@
+% =====================================================================
+% AutoQP -- UML Class Diagram (abstract level)
+% Attributes are names only (no types); methods are bare verbs (no
+% parameters or return types). This is deliberate: at design stage the
+% diagram records *responsibilities*, not signatures.
+% Standalone TikZ document; the tikzpicture can be dropped into a larger
+% document as a figure.
+% =====================================================================
+\documentclass[tikz, border=12pt]{standalone}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usetikzlibrary{positioning, calc, arrows.meta, shapes.multipart}
+
+% --- Text helpers -----------------------------------------------------
+\newcommand{\clsname}[1]{\textbf{#1}}          % class name
+\newcommand{\stereo}[1]{{\tiny\guillemotleft #1\guillemotright}}
+\newcommand{\priv}{$-$\,}                       % private attribute marker
+\newcommand{\pub}{$+$\,}                        % public method marker
+
+% --- Reusable styles --------------------------------------------------
+\tikzset{
+  % Class box with name / attributes / methods compartments
+  umlclass/.style = {
+    rectangle split, rectangle split parts=3,
+    draw, thick, align=left, font=\scriptsize,
+    rectangle split part align=left,
+    text width=2.9cm, inner sep=4pt
+  },
+  % Class box with name + one compartment only
+  umlclass2/.style = {
+    rectangle split, rectangle split parts=2,
+    draw, thick, align=left, font=\scriptsize,
+    rectangle split part align=left,
+    text width=2.9cm, inner sep=4pt
+  },
+  generalize/.style = { thick, -{Triangle[open, length=3.2mm, width=2.6mm]} },
+  compose/.style    = { thick, {Diamond[length=2.8mm, width=2mm]}- },
+  depend/.style     = { thick, dashed, -{Stealth[length=2.2mm]} },
+  uassoc/.style     = { thick },
+  mult/.style       = { font=\tiny, fill=white, inner sep=1pt },
+  rel/.style        = { font=\scriptsize, fill=white, inner sep=1pt }
+}
+
+\begin{document}
+\begin{tikzpicture}[node distance=1.4cm and 2.6cm]
+
+  % ------------------------------------------------------------------
+  % Row 1: users, subject scoping, topics
+  % ------------------------------------------------------------------
+  \node[umlclass] (subject) {
+    \clsname{Subject}
+    \nodepart{second}
+    \priv id \\ \priv name \\ \priv code
+    \nodepart{third}
+    \pub addTopic()
+  };
+
+  \node[umlclass2, left=2.6cm of subject] (topic) {
+    \clsname{Topic}
+    \nodepart{second}
+    \priv id \\ \priv name
+  };
+
+  \node[umlclass, right=2.6cm of subject] (user) {
+    \clsname{User}
+    \nodepart{second}
+    \priv id \\ \priv fullName \\ \priv role
+    \nodepart{third}
+    \pub assignToSubject()
+  };
+
+  % ------------------------------------------------------------------
+  % Row 2+: question hierarchy (left) and staging
+  % ------------------------------------------------------------------
+  \node[umlclass, below=3.2cm of topic] (question) {
+    \textit{\clsname{Question}} \\ \stereo{abstract}
+    \nodepart{second}
+    \priv id \\ \priv difficulty \\ \priv marks \\ \priv text \\
+    \priv imageRefs \\ \priv version
+    \nodepart{third}
+    \pub fork()
+  };
+
+  \node[umlclass, left=2.8cm of question] (staging) {
+    \clsname{StagingQuestion}
+    \nodepart{second}
+    \priv source \\ \priv confidence
+    \nodepart{third}
+    \pub promote() \\ \pub discard()
+  };
+
+  \node[umlclass2, below=1.9cm of question] (numerical) {
+    \clsname{NumericalQuestion}
+    \nodepart{second}
+    \priv expectedValue \\ \priv tolerance
+  };
+  \node[umlclass2, left=0.4cm of numerical] (mcq) {
+    \clsname{MCQQuestion}
+    \nodepart{second}
+    \priv options \\ \priv correctOption
+  };
+  \node[umlclass2, right=0.4cm of numerical] (longanswer) {
+    \clsname{LongAnswerQuestion}
+    \nodepart{second}
+    \priv solution
+  };
+
+  % ------------------------------------------------------------------
+  % Right side: paper and its frozen-snapshot chain
+  % ------------------------------------------------------------------
+  \node[umlclass, below=3.2cm of user] (paper) {
+    \clsname{Paper}
+    \nodepart{second}
+    \priv title \\ \priv totalMarks \\ \priv status
+    \nodepart{third}
+    \pub addSection()
+  };
+
+  \node[umlclass, below=1.9cm of paper] (section) {
+    \clsname{PaperSection}
+    \nodepart{second}
+    \priv name \\ \priv orderIndex
+    \nodepart{third}
+    \pub addQuestion()
+  };
+
+  \node[umlclass, below=1.9cm of section] (paperq) {
+    \clsname{PaperQuestion}
+    \nodepart{second}
+    \priv orderIndex \\ \priv marksUsed \\ \priv sourceVersion
+    \nodepart{third}
+    \pub isOutdated() \\ \pub refresh()
+  };
+
+  \node[umlclass2, right=2.6cm of paperq] (snapshot) {
+    \clsname{QuestionSnapshot}
+    \nodepart{second}
+    \priv content \textit{(frozen copy)}
+  };
+
+  % ------------------------------------------------------------------
+  % Control / boundary classes
+  % ------------------------------------------------------------------
+  \node[umlclass2, right=2.8cm of paper] (blueprint) {
+    \clsname{BlueprintGenerator} \\ \stereo{control}
+    \nodepart{second}
+    \pub generate()
+  };
+
+  \node[umlclass2, below=1.9cm of blueprint] (compiler) {
+    \clsname{CompilationService} \\ \stereo{boundary}
+    \nodepart{second}
+    \pub compile()
+  };
+
+  \node[above=1.2cm of subject, align=center] (title) {
+    {\Large\bfseries AutoQP -- Class Diagram} \\[0.2em]
+    {\small Mehul $\bullet$ Milind Pushp $\bullet$ Misty Jangid $\bullet$ Md. Ali Khan}
+  };
+
+  % ------------------------------------------------------------------
+  % Relationships
+  % ------------------------------------------------------------------
+
+  % User <-> Subject (many-to-many)
+  \draw[uassoc] (user) -- node[mult, near start] {0..*} node[mult, near end] {0..*}
+    node[rel, above, midway] {assigned to} (subject);
+
+  % Subject owns Topics (composition)
+  \draw[compose] (subject) -- node[mult, near start, above] {1} node[mult, near end, above] {0..*} (topic);
+
+  % Topic tags Question (optional)
+  \draw[uassoc] (topic) -- node[mult, near start] {0..1} node[mult, near end] {0..*}
+    node[rel, right, midway] {tags} (question);
+
+  % Subject scopes Question and Paper
+  \draw[uassoc] (subject) -- node[mult, near start] {1} node[mult, near end] {0..*}
+    node[rel, midway, above right] {scopes} (question);
+  \draw[uassoc] (subject) -- node[mult, near start] {1} node[mult, near end] {0..*}
+    node[rel, midway, above left] {scopes} (paper);
+
+  % Question generalization (bus style, single triangle into the base class)
+  \coordinate (genbus) at ($(question.south)!0.5!(numerical.north)$);
+  \draw[thick] (mcq.north) |- (genbus);
+  \draw[thick] (longanswer.north) |- (genbus);
+  \draw[generalize] (numerical.north) -- (question.south);
+
+  % Staging promotes to Question
+  \draw[depend] (staging) -- node[rel, above] {\guillemotleft promotes to\guillemotright} (question);
+
+  % Paper composition chain
+  \draw[compose] (paper) -- node[mult, near start, right] {1} node[mult, near end, right] {1..*} (section);
+  \draw[compose] (section) -- node[mult, near start, right] {1} node[mult, near end, right] {0..*} (paperq);
+  \draw[compose] (paperq) -- node[mult, near start, above] {1} node[mult, near end, above] {1} (snapshot);
+
+  % Weak (dashed) association: PaperQuestion softly sourced from Question.
+  % Contrast with the solid composition to QuestionSnapshot above.
+  \draw[uassoc, dashed] (paperq.west) -- ++(-1.3,0) |- (question.east);
+  \node[mult, above left]  at (paperq.west)  {0..*};
+  \node[mult, above right] at (question.east) {0..1};
+  \node[rel] at ($(paperq.west)+(-1.3,2.4)$) {sourced from};
+
+  % Control / boundary dependencies
+  \draw[depend] (blueprint) -- node[rel, above] {\guillemotleft creates\guillemotright} (paper);
+  \draw[depend] (compiler) -- node[rel, above, sloped] {\guillemotleft compiles\guillemotright} (paper);
+
+\end{tikzpicture}
+\end{document}
