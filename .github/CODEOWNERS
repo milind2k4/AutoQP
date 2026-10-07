@@ -1,0 +1,26 @@
+# Default fallback for unmapped files
+# *                       @mehulsinghtomar @misty2810
+
+# 1. Milind: LaTeX Engine & Core Compilation
+/packages/schema/                   @milind2k4
+/apps/compile-worker/               @milind2k4
+/apps/web/modules/compile/          @milind2k4
+/apps/web/api/compile/              @milind2k4
+
+# # 2. Mohd. Ali: AI & Multimodal Ingestion
+# /apps/web/modules/intake/           @Mohd-Ali-Creator
+# /apps/web/api/questions/            @Mohd-Ali-Creator
+# /apps/web/api/staging/              @Mohd-Ali-Creator
+
+# # 3. Misty: Backend, Database & Pattern Generator
+# /db/                                @misty2810
+# /apps/web/lib/supabase/             @misty2810
+# /apps/web/modules/auth/             @misty2810
+# /apps/web/api/auth/                 @misty2810
+# /apps/web/modules/bank/blueprint-generator.ts @misty2810
+
+# # 4. Mehul: Frontend UI/UX & Visual Builder
+# /apps/web/app/                      @mehulsinghtomar
+# /apps/web/components/               @mehulsinghtomar
+# /apps/web/modules/bank/components/  @mehulsinghtomar
+# /apps/web/modules/bank/search-questions.ts @mehulsinghtomar
