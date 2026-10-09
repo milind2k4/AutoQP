@@ -1,0 +1,23 @@
+{
+  "name": "@autoqp/schema",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/question.schema.ts",
+  "types": "./src/question.schema.ts",
+  "exports": {
+    ".": "./src/question.schema.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}
